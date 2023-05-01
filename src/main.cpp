@@ -3,13 +3,16 @@
 #include "GrubEnv.h"
 #include "UbootEnv.h"
 #include "BootloaderEnv.h"
+#include "UpdateProgress.h"
 
 
 int main(void)
 {
-    //Updater::GetInstance()->startUpdate("empty_test.swu");
-    BootloaderEnv *myenv;
-    myenv = new GrubEnv();
-    myenv->printEnv();
+    Updater::GetInstance()->startUpdate("/home/twan/Documents/empty_test.swu");
+    UpdateProgress mypr;
+    while(1)
+    {
+        mypr.getProgress();
+    }
     return 0;
 }

@@ -6,9 +6,10 @@ class UpdateProgress
     public:
         UpdateProgress();
         ~UpdateProgress();
+        void getProgress();
 
     private:
-
+        int m_SWprogressFd; // File descriptor for SWupdate progress
 };
 
 
