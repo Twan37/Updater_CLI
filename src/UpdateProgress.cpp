@@ -6,7 +6,7 @@
 UpdateProgress::UpdateProgress()
 {
     m_SWprogressFd = -1;
-    m_SWprogressFd = progress_ipc_connect(1); // Try what this does!
+    m_SWprogressFd = progress_ipc_connect(1);
 
 }
 

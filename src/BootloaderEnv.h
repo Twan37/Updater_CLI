@@ -10,9 +10,11 @@ class BootloaderEnv
 {
     public:
         virtual void printEnv() = 0;
-        virtual std::string getVal(std::string keyName) = 0;
-        virtual void setVal(std::string keyName, std::string valStr) = 0;
-        virtual void setVal(std::string keyName, int valInt) = 0;  
+        virtual std::string getVal(const std::string& keyName) = 0;
+        virtual void setVal(const std::string& keyName, const std::string& valStr) = 0;
+        virtual void setVal(const std::string& keyName, int valInt) = 0;
+        virtual void saveEnv() = 0;
+        virtual void reloadEnv() = 0;
 };
 
 

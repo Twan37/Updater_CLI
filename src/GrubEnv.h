@@ -14,14 +14,14 @@ class GrubEnv: public BootloaderEnv
         ~GrubEnv();
 
         void printEnv();
-        std::string getVal(std::string keyName) override;
-        void setVal(std::string keyName, std::string valStr) override;
-        void setVal(std::string keyName, int valInt) override;
+        std::string getVal(const std::string& keyName) override;
+        void setVal(const std::string& keyName, const std::string& valStr) override;
+        void setVal(const std::string& keyName, int valInt) override;
+        void saveEnv() override;
+        void reloadEnv() override;
 
     private:
         void readEnv();
-        void writeEnv();
-
         std::map<std::string, std::string> m_envVars;
 };
 

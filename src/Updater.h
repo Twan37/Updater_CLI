@@ -6,6 +6,7 @@
 #include <network_ipc.h>
 #include <fstream>
 #include <mutex>
+#include "BootloaderEnv.h"
 
 class Updater
 {
@@ -20,17 +21,22 @@ class Updater
         Updater(const Updater&) = delete;
         void operator=(const Updater &) = delete;
 
-
         void startUpdate(std::string updateFile);
         static Updater *GetInstance();
+        static std::string getBootedRootfs();
+        static std::string getUpdateTarget();
+        void setUpdatePartSymlink(const std::string& updateRootfsPart);
+        std::string readBootloader() {return s_bootloaderEnv->getVal("ustate");}
 
     private:
         Updater();
         ~Updater();
 
-        static std::mutex m_stateMutex;
+        int selftest();
+        static BootloaderEnv *s_bootloaderEnv;
+        static std::mutex s_stateMutex;
 
-        static UpdateState m_updateState;
+        static UpdateState s_updateState;
 
         static Updater *s_Instance;
 
@@ -41,8 +47,8 @@ class Updater
         static pthread_mutex_t mymutex;
         static pthread_cond_t cv_end;
 
-        static std::ifstream m_updateFile;
-        struct swupdate_request m_updateRequest;
+        static std::ifstream s_updateFile;
+        struct swupdate_request s_updateRequest;
 };
 
 #endif /* UPDATER_H_*/

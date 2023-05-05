@@ -11,7 +11,7 @@
 
 GrubEnv::GrubEnv()
 {
-    
+    readEnv();
 }
 
 GrubEnv::~GrubEnv()
@@ -22,62 +22,29 @@ GrubEnv::~GrubEnv()
 
 void GrubEnv::printEnv()
 {
-    readEnv();
     for (const auto& pair : m_envVars) 
     {
         std::cout << pair.first << "=" << pair.second << std::endl;
     }
 }
 
-std::string GrubEnv::getVal(std::string keyName)
+std::string GrubEnv::getVal(const std::string& keyName)
 {
     readEnv();
     return m_envVars[keyName];
 }
 
-void GrubEnv::setVal(std::string keyName, std::string valStr)
+void GrubEnv::setVal(const std::string& keyName, const std::string& valStr)
 {
-    readEnv();
     m_envVars[keyName] = valStr;
-    writeEnv();
 }
 
-void GrubEnv::setVal(std::string keyName, int valInt)
+void GrubEnv::setVal(const std::string& keyName, int valInt)
 {
-    readEnv();
     m_envVars[keyName] = std::to_string(valInt);
-    writeEnv();
 }
 
-
-void GrubEnv::readEnv()
-{
-    std::ifstream grubEnvFile(GRUBENV_PATH);
-
-    if (!grubEnvFile.is_open()) 
-    {
-        std::cout << "Error: failed to open " << GRUBENV_PATH << std::endl;
-        return;
-    }
-    
-    std::string line;
-    while (getline(grubEnvFile, line)) 
-    {
-        if (line.size() > 0 && line[0] != '#') 
-        {
-            size_t pos = line.find('=');
-            if (pos != std::string::npos) 
-            {
-                std::string key = line.substr(0, pos);
-                std::string value = line.substr(pos + 1);
-                m_envVars.insert({key, value});
-            }
-        }
-    }
-    grubEnvFile.close();
-}
-
-void GrubEnv::writeEnv()
+void GrubEnv::saveEnv()
 {
     std::string envOutput = GRUBENV_HEADER;
     for (const auto& pair : m_envVars) 
@@ -101,4 +68,37 @@ void GrubEnv::writeEnv()
     }
 
     // First writing to a copy and then renaming to original might even be a safer way of doing things
+}
+
+void GrubEnv::reloadEnv()
+{
+    readEnv();
+}
+
+
+void GrubEnv::readEnv()
+{
+    std::ifstream grubEnvFile(GRUBENV_PATH);
+
+    if (!grubEnvFile.is_open()) 
+    {
+        std::cout << "Error: failed to open " << GRUBENV_PATH << std::endl;
+        return;
+    }
+    
+    std::string line;
+    while (getline(grubEnvFile, line)) 
+    {
+        if (line.size() > 0 && line[0] != '#') 
+        {
+            size_t pos = line.find('=');
+            if (pos != std::string::npos) 
+            {
+                std::string key = line.substr(0, pos);
+                std::string value = line.substr(pos + 1);
+                m_envVars[key] = value;
+            }
+        }
+    }
+    grubEnvFile.close();
 }

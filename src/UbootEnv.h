@@ -14,14 +14,15 @@ class UbootEnv: public BootloaderEnv
         ~UbootEnv();
 
         void printEnv();
-        std::string getVal(std::string keyName) override;
-        void setVal(std::string keyName, std::string valStr) override;
-        void setVal(std::string keyName, int valInt) override;
+        std::string getVal(const std::string& keyName) override;
+        void setVal(const std::string& keyName, const std::string& valStr) override;
+        void setVal(const std::string& keyName, int valInt) override;
+        void saveEnv() override;
+        void reloadEnv() override;
 
     private:
-        struct uboot_ctx *m_UbootCTX = NULL;
         void initEnv();
-        
+        struct uboot_ctx *m_UbootCTX = NULL;
 };
 
 

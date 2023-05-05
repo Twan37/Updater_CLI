@@ -6,12 +6,13 @@
 
 UbootEnv::UbootEnv()
 {
-
+    initEnv();
 }
 
 UbootEnv::~UbootEnv()
 {
-
+    libuboot_close(m_UbootCTX);
+    libuboot_exit(m_UbootCTX);
 }
 
 void UbootEnv::initEnv()
@@ -37,48 +38,49 @@ void UbootEnv::initEnv()
             exit(1);
         }
     }
-
 }
 
 
 void UbootEnv::printEnv()
 {
-    initEnv();
     void *tmp = NULL;
     while ((tmp = libuboot_iterator(m_UbootCTX, tmp)) != NULL) 
     {
         std::cout << libuboot_getname(tmp) << "=" << libuboot_getvalue(tmp) << std::endl;
     }
-    libuboot_close(m_UbootCTX);
-    libuboot_exit(m_UbootCTX);
 }
 
-std::string UbootEnv::getVal(std::string keyName)
+std::string UbootEnv::getVal(const std::string& keyName)
 {
-    initEnv();
-    return std::string(libuboot_get_env(m_UbootCTX, keyName.c_str()));
-    libuboot_close(m_UbootCTX);
-    libuboot_exit(m_UbootCTX);
+    std::string UbootVal;
+    UbootVal = std::string(libuboot_get_env(m_UbootCTX, keyName.c_str()));
+    return UbootVal;
 }
 
 
-void UbootEnv::setVal(std::string keyName, std::string valStr)
+void UbootEnv::setVal(const std::string& keyName, const std::string& valStr)
 {
-    initEnv();
     libuboot_set_env(m_UbootCTX, keyName.c_str(), valStr.c_str());
-    
+}
+
+void UbootEnv::setVal(const std::string& keyName, int valInt)
+{
+    std::string valIntStr = std::to_string(valInt);
+    setVal(keyName, valIntStr);
+}
+
+void UbootEnv::saveEnv()
+{
     // Storing the env. This might fail without the necessary permissions.
     if (libuboot_env_store(m_UbootCTX))
     {
         std::cout << "Eror storing the env" << std::endl;
     }
-
-    libuboot_close(m_UbootCTX);
-    libuboot_exit(m_UbootCTX);
 }
 
-void UbootEnv::setVal(std::string keyName, int valInt)
+void UbootEnv::reloadEnv()
 {
-    std::string valIntStr = std::to_string(valInt);
-    setVal(keyName, valIntStr);
+    libuboot_close(m_UbootCTX);
+    libuboot_exit(m_UbootCTX);
+    initEnv();
 }
