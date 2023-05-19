@@ -2,85 +2,108 @@
 #include <libuboot.h>
 #include <string>
 
-#define UBOOT_DEFAULT_ENV_PATH  "/etc/fw_env.config"
+#define UBOOT_DEFAULT_CONFIG_PATH   "/etc/fw_env.config"
+#define UBOOT_DEFAULT_ENV_PATH      "/etc/u-boot-initial-env"
 
 UbootEnv::UbootEnv()
 {
-    initEnv();
+    readEnv()
 }
 
 UbootEnv::~UbootEnv()
 {
-    libuboot_close(m_UbootCTX);
-    libuboot_exit(m_UbootCTX);
+
 }
 
 void UbootEnv::initEnv()
 {
     if (libuboot_initialize(&m_UbootCTX, NULL) < 0)
     {
-        std::cout << "ERROR: Environment not initialized" << std::endl;
+        std::cout << "[ERROR] Unable to initialize U-Boot environment" << std::endl;
         exit(1);
     }
     
-    if (libuboot_read_config(m_UbootCTX, UBOOT_DEFAULT_ENV_PATH) < 0)
+    if (libuboot_read_config(m_UbootCTX, UBOOT_DEFAULT_CONFIG_PATH) < 0)
     {
-        std::cout << "ERROR: Something is wrong when trying to read the " << UBOOT_DEFAULT_ENV_PATH << " configuration file" << std::endl; 
+        std::cout << "[ERROR] Something went wrong while trying to read the " << UBOOT_DEFAULT_CONFIG_PATH << " configuration file" << std::endl;
         exit(1);
     }
 
     if (libuboot_open(m_UbootCTX) < 0)
     {
-        std::cout << "Cannot read env using default" << std::endl;
-        if (libuboot_load_file(m_UbootCTX, UBOOT_DEFAULT_ENV_PATH) < 0)
+        std::cout << "[ERROR] Cannot read the environment by using the " << UBOOT_DEFAULT_CONFIG_PATH << " configuration file" << std::endl;
+        if (libuboot_load_file(m_UbootCTX, UBOOT_DEFAULT_CONFIG_PATH) < 0)
         {
-            std::cout << "ERROR: Cannot read default env from file" << std::endl;
+            std::cout << "[ERROR] Cannot read default env from the " << UBOOT_DEFAULT_ENV_PATH  << " file" << std::endl;
             exit(1);
         }
     }
 }
 
+void UbootEnv::readEnv()
+{
+    void *tmp = NULL;
+
+    initEnv();
+    while ((tmp = libuboot_iterator(m_UbootCTX, tmp)) != NULL) 
+    {
+        m_envVars[std::string(libuboot_getname(tmp))] = std::string(libuboot_getvalue(tmp));
+    }
+    closeEnv();
+}
+
 
 void UbootEnv::printEnv()
 {
-    void *tmp = NULL;
-    while ((tmp = libuboot_iterator(m_UbootCTX, tmp)) != NULL) 
+    reloadEnv();
+    for (const auto& pair : m_envVars) 
     {
-        std::cout << libuboot_getname(tmp) << "=" << libuboot_getvalue(tmp) << std::endl;
+        std::cout << pair.first << "=" << pair.second << std::endl;
     }
 }
 
+
 std::string UbootEnv::getVal(const std::string& keyName)
 {
-    std::string UbootVal;
-    UbootVal = std::string(libuboot_get_env(m_UbootCTX, keyName.c_str()));
-    return UbootVal;
+    reloadEnv(); // If SWupdate sets new values it has to reload the env to be able to see them
+    return m_envVars[keyName];
 }
 
 
 void UbootEnv::setVal(const std::string& keyName, const std::string& valStr)
 {
-    libuboot_set_env(m_UbootCTX, keyName.c_str(), valStr.c_str());
+    m_envVars[keyName] = valStr;
 }
 
 void UbootEnv::setVal(const std::string& keyName, int valInt)
 {
-    std::string valIntStr = std::to_string(valInt);
-    setVal(keyName, valIntStr);
+    m_envVars[keyName] = std::to_string(valInt);
 }
 
 void UbootEnv::saveEnv()
 {
+    initEnv();
+    for (const auto& pair : m_envVars) 
+    {
+        std::cout << pair.first << "=" << pair.second << std::endl;
+        libuboot_set_env(m_UbootCTX, pair.first.c_str(), pair.second.c_str());
+    }
+
     // Storing the env. This might fail without the necessary permissions.
     if (libuboot_env_store(m_UbootCTX))
     {
-        std::cout << "Eror storing the env" << std::endl;
+        std::cout << "[ERROR] Can't store the env. This might be due to not having the right permissions" << std::endl;
     }
+    closeEnv();
 }
 
 void UbootEnv::reloadEnv()
 {
+    readEnv();  // In this case reloading is just reading again
+}
+
+void UbootEnv::closeEnv()
+{
     libuboot_close(m_UbootCTX);
     libuboot_exit(m_UbootCTX);
-    initEnv();
 }

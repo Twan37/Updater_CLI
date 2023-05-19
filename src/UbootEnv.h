@@ -22,7 +22,10 @@ class UbootEnv: public BootloaderEnv
 
     private:
         void initEnv();
-        struct uboot_ctx *m_UbootCTX = NULL;
+        void readEnv();
+        void closeEnv();
+        struct uboot_ctx *m_UbootCTX;
+        std::map<std::string, std::string> m_envVars;
 };
 
 
