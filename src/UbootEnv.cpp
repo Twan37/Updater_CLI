@@ -7,7 +7,7 @@
 
 UbootEnv::UbootEnv()
 {
-    readEnv()
+    readEnv();
 }
 
 UbootEnv::~UbootEnv()
